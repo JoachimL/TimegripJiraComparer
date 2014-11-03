@@ -90,24 +90,13 @@ namespace TimegripExtended
             {
                 foreach (var timegripActivity in timegripActivities)
                 {
-                    if (jiraTask.Task == timegripActivity.Activity)
+                    if (jiraTask.Task.Equals(timegripActivity.Activity, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (jiraTask.IsClosed)
+                        jiraAndTimegrips.Add(new JiraAndTimegrip()
                         {
-                            jiraAndTimegrips.Add(new JiraAndTimegrip()
-                            {
-                                Activity = timegripActivity,
-                                Task = jiraTask
-                            });
-                        }
-                        else
-                        {
-                            jiraAndTimegrips.Add(new JiraAndTimegrip()
-                            {
-                                Activity = timegripActivity,
-                                Task = jiraTask
-                            });
-                        }
+                            Activity = timegripActivity,
+                            Task = jiraTask
+                        });
                     }
                 }
             }
@@ -156,7 +145,7 @@ namespace TimegripExtended
 
                     var users = query.ToList();
 
-                    
+
                 }
             }
         }

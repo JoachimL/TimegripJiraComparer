@@ -37,21 +37,21 @@ namespace TimegripExtended.Converters
                         var element = xElement.Element(KeyXName);
                         if (element != null)
                         {
-                            jiraTask.Task = element.Value;
+                            jiraTask.Task = element.Value.Trim();
                         }
-                        
+
                         element = xElement.Element(TitleXName);
                         if (element != null)
                         {
                             jiraTask.Title = element.Value;
                         }
-                        
+
                         element = xElement.Element(StatusXName);
                         if (element != null)
                         {
                             jiraTask.Status = element.Value;
                         }
-                        
+
                         element = xElement.Element(EstimateXName);
                         if (element != null)
                         {
@@ -65,7 +65,7 @@ namespace TimegripExtended.Converters
                                 }
                             }
                         }
-                        
+
                         element = xElement.Element(TimespentXName);
                         if (element != null)
                         {
