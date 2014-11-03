@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Windows.Forms;
 using TimegripExtended.Business.Domain;
@@ -14,7 +15,11 @@ namespace TimegripExtended
 {
     public partial class Form1 : Form
     {
-        private JiraTasks jiraTasks;
+        private const string DefaultFolder = "c:\\temp\\timegripextended";
+        private const string TimeGripDirectoryFile = "TimegripDirectory.txt";
+        private const string JiraDirectoryFile = "JiraDirectory.txt";
+        private JiraTasks _jiraTasks;
+        private TimegripActivities _timegripActivities;
 
         public Form1()
         {
@@ -22,26 +27,82 @@ namespace TimegripExtended
             dataGridView1.AutoGenerateColumns = false;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void browseTimegripFileButton_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = "c:\\temp\\timegripextended";
-            openFileDialog1.RestoreDirectory = true;
-
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            openTimegripFileDialog.InitialDirectory = GetTimegripDirectory();
+            if (openTimegripFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox1.Text = openFileDialog1.FileName;
+                var fileName = openTimegripFileDialog.FileName;
+                SetTimegripDirectory(fileName);
+                textBox1.Text = fileName;
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private static string GetTimegripDirectory()
         {
-            openFileDialog2.InitialDirectory = "c:\\temp\\timegripextended";
-            openFileDialog2.RestoreDirectory = true;
+            return GetDirectoryFromFile(TimeGripDirectoryFile);
+        }
 
-            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+        private static void SetTimegripDirectory(string fileName)
+        {
+            WriteDirectoryNameToFile(TimeGripDirectoryFile, new FileInfo(fileName).DirectoryName);
+        }
+
+        private void browseJiraFileButton_Click(object sender, EventArgs e)
+        {
+            openJiraFileDialog.InitialDirectory = GetJiraDirectory();
+            if (openJiraFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox2.Text = openFileDialog2.FileName;
+                var fileName = openJiraFileDialog.FileName;
+                SetJiraDirectory(fileName);
+                textBox2.Text = fileName;
             }
+        }
+
+        private static string GetJiraDirectory()
+        {
+            return GetDirectoryFromFile(JiraDirectoryFile);
+        }
+
+        private static void SetJiraDirectory(string fileName)
+        {
+            WriteDirectoryNameToFile(JiraDirectoryFile, fileName);
+        }
+
+        private static string GetDirectoryFromFile(string directory)
+        {
+            var isoStore = GetIsolatedStorageFile(directory);
+            using (var reader = new StreamReader(isoStore.OpenFile(directory, FileMode.Open)))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+
+        private static IsolatedStorageFile GetIsolatedStorageFile(string fileName)
+        {
+            var isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Assembly, null, null);
+            if (isoStore.FileExists(fileName))
+                return isoStore;
+            WriteDefault(fileName, isoStore);
+            return isoStore;
+        }
+
+        private static void WriteDefault(string fileName, IsolatedStorageFile isoStore)
+        {
+            WriteToIsolatedStorageFile(fileName, isoStore, DefaultFolder);
+        }
+
+        private static void WriteToIsolatedStorageFile(string fileName, IsolatedStorageFile isoStore, string textToWrite)
+        {
+            using (var stream = new StreamWriter(isoStore.CreateFile(fileName)))
+            {
+                stream.Write(textToWrite);
+            }
+        }
+
+        private static void WriteDirectoryNameToFile(string fileName, string directoryFileName)
+        {
+            WriteToIsolatedStorageFile(fileName, GetIsolatedStorageFile(fileName), directoryFileName);
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -73,22 +134,39 @@ namespace TimegripExtended
 
         private bool FilesAreSelected()
         {
-            return openFileDialog1.FileName != "openFileDialog1" &&
-                            openFileDialog2.FileName != "openFileDialog2";
+            return openTimegripFileDialog.FileName != "openFileDialog1" &&
+                            openJiraFileDialog.FileName != "openFileDialog2";
         }
 
         private IEnumerable<JiraAndTimegrip> GetCombinedTaskSource()
         {
-            var tgfileStream = openFileDialog1.OpenFile();
-            var jtfileStream = openFileDialog2.OpenFile();
-
-            var timegripActivities = GetTimegripActivities(tgfileStream);
-            jiraTasks = GetJiraTasks(jtfileStream);
-
-            var jiraAndTimegrips = new List<JiraAndTimegrip>(jiraTasks.Count());
-            foreach (var jiraTask in jiraTasks)
+            using (var tgfileStream = openTimegripFileDialog.OpenFile())
             {
-                foreach (var timegripActivity in timegripActivities)
+                _timegripActivities = GetTimegripActivities(tgfileStream);
+            }
+            using (var jtfileStream = openJiraFileDialog.OpenFile())
+            {
+                _jiraTasks = GetJiraTasks(jtfileStream);
+            }
+
+            var jiraAndTimegrips = new List<JiraAndTimegrip>(_jiraTasks.Count());
+            foreach (var jiraTask in _jiraTasks.GroupBy(t => t.Task.Trim().ToUpper()).Select(g => new JiraTask()
+            {
+                Task = g.Key,
+                Status = g.Select(t => t.Status).FirstOrDefault(),
+                Estimate = TimeSpan.FromMinutes(g.Sum(t => t.Estimate.TotalMinutes)),
+                Timespent = TimeSpan.FromMinutes(g.Sum(t => t.Timespent.TotalMinutes)),
+                Title = g.Select(t => t.Title).FirstOrDefault()
+            }))
+            {
+                foreach (var timegripActivity in _timegripActivities.GroupBy(a => a.Activity).Select(a => new TimegripActivity()
+                {
+                    Activity = a.Key,
+                    Amount = a.Sum(t => t.Amount),
+                    TimeUsed = TimeSpan.FromMinutes(a.Sum(t => t.TimeUsed.TotalMinutes)),
+                    Customer = a.Select(t => t.Customer).FirstOrDefault(),
+                    Project = a.Select(t => t.Project).FirstOrDefault(),
+                }))
                 {
                     if (jiraTask.Task.Equals(timegripActivity.Activity, StringComparison.OrdinalIgnoreCase))
                     {
@@ -124,7 +202,7 @@ namespace TimegripExtended
         {
             using (var db = new TaskStoreContext())
             {
-                var firstOrDefault = jiraTasks.FirstOrDefault(jt => jt.Task == txtExclude.Text);
+                var firstOrDefault = _jiraTasks.FirstOrDefault(jt => jt.Task == txtExclude.Text);
                 db.ExcludedTasks.Add(new ExcludedTask { JiraNumber = txtExclude.Text, Name = firstOrDefault != null ? firstOrDefault.Title : string.Empty, Excluded = DateTime.Now });
                 db.SaveChanges();
             }

@@ -28,13 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
-            this.button2 = new System.Windows.Forms.Button();
+            this.browseTimegripFileButton = new System.Windows.Forms.Button();
+            this.openTimegripFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.openJiraFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.browseJiraFileButton = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.button3 = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
@@ -68,33 +68,37 @@
             this.textBox1.Size = new System.Drawing.Size(347, 20);
             this.textBox1.TabIndex = 0;
             // 
-            // button1
+            // browseTimegripFileButton
             // 
-            this.button1.Location = new System.Drawing.Point(356, 3);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(101, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Browse: TG-file";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.browseTimegripFileButton.Location = new System.Drawing.Point(356, 3);
+            this.browseTimegripFileButton.Name = "browseTimegripFileButton";
+            this.browseTimegripFileButton.Size = new System.Drawing.Size(101, 23);
+            this.browseTimegripFileButton.TabIndex = 1;
+            this.browseTimegripFileButton.Text = "Browse: TG-file";
+            this.browseTimegripFileButton.UseVisualStyleBackColor = true;
+            this.browseTimegripFileButton.Click += new System.EventHandler(this.browseTimegripFileButton_Click);
             // 
-            // openFileDialog1
+            // openTimegripFileDialog
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.openTimegripFileDialog.FileName = "openTimegripFileDialog";
+            this.openTimegripFileDialog.Filter = "CSV Files|*.csv";
+            this.openTimegripFileDialog.RestoreDirectory = true;
             // 
-            // openFileDialog2
+            // openJiraFileDialog
             // 
-            this.openFileDialog2.FileName = "openFileDialog2";
+            this.openJiraFileDialog.FileName = "openJiraFileDialog";
+            this.openJiraFileDialog.Filter = "XML files|*.xml";
+            this.openJiraFileDialog.RestoreDirectory = true;
             // 
-            // button2
+            // browseJiraFileButton
             // 
-            this.button2.Location = new System.Drawing.Point(356, 29);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(101, 23);
-            this.button2.TabIndex = 3;
-            this.button2.Text = "Browse: Jira-file";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.browseJiraFileButton.Location = new System.Drawing.Point(356, 29);
+            this.browseJiraFileButton.Name = "browseJiraFileButton";
+            this.browseJiraFileButton.Size = new System.Drawing.Size(101, 23);
+            this.browseJiraFileButton.TabIndex = 3;
+            this.browseJiraFileButton.Text = "Browse: Jira-file";
+            this.browseJiraFileButton.UseVisualStyleBackColor = true;
+            this.browseJiraFileButton.Click += new System.EventHandler(this.browseJiraFileButton_Click);
             // 
             // textBox2
             // 
@@ -137,8 +141,8 @@
             // TaskName
             // 
             this.TaskName.DataPropertyName = "TaskName";
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.TaskName.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.TaskName.DefaultCellStyle = dataGridViewCellStyle3;
             this.TaskName.HeaderText = "Jira number";
             this.TaskName.Name = "TaskName";
             this.TaskName.Width = 250;
@@ -178,8 +182,8 @@
             // Comment
             // 
             this.Comment.DataPropertyName = "Comment";
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Comment.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Comment.DefaultCellStyle = dataGridViewCellStyle4;
             this.Comment.HeaderText = "Comment";
             this.Comment.Name = "Comment";
             this.Comment.Width = 180;
@@ -213,11 +217,11 @@
             this.panel1.Controls.Add(this.button5);
             this.panel1.Controls.Add(this.textBox1);
             this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.button2);
+            this.panel1.Controls.Add(this.browseJiraFileButton);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Controls.Add(this.button3);
             this.panel1.Controls.Add(this.textBox2);
-            this.panel1.Controls.Add(this.button1);
+            this.panel1.Controls.Add(this.browseTimegripFileButton);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
@@ -303,10 +307,10 @@
         #endregion
 
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog2;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button browseTimegripFileButton;
+        private System.Windows.Forms.OpenFileDialog openTimegripFileDialog;
+        private System.Windows.Forms.OpenFileDialog openJiraFileDialog;
+        private System.Windows.Forms.Button browseJiraFileButton;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.DataGridView dataGridView1;
