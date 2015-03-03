@@ -80,5 +80,7 @@ namespace TimegripExtended.Business.Domain
         }
 
 
+
+        public DateTime Updated { get; set; }
     }
 }

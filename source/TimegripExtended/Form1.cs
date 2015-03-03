@@ -117,12 +117,16 @@ namespace TimegripExtended
 
         private IEnumerable<JiraAndTimegrip> GetCombinedTasksSourceIfAvailable()
         {
-            IEnumerable<JiraAndTimegrip> dataSource = Enumerable.Empty<JiraAndTimegrip>();
             if (!FilesAreSelected())
-                MessageBox.Show(@"Select files");
+                return AlertAndReturnEmpty();
             else
-                dataSource = GetCombinedTaskSource();
-            return dataSource.OrderByDescending(GetIssueNumber);
+                return GetCombinedTaskSource().OrderByDescending(t => t.Updated);
+        }
+
+        private static IEnumerable<JiraAndTimegrip> AlertAndReturnEmpty()
+        {
+            MessageBox.Show(@"Select files");
+            return Enumerable.Empty<JiraAndTimegrip>();
         }
 
         private static int GetIssueNumber(JiraAndTimegrip t)
@@ -148,37 +152,48 @@ namespace TimegripExtended
             {
                 _jiraTasks = GetJiraTasks(jtfileStream);
             }
+            var timegripActivities = GetTimegripActivities();
+            return GetJiraTasks().SelectMany(jira => timegripActivities.Where(tg => AreTheSameTask(jira, tg)).Select(tg => CreateJiraAndTimegripTask(jira, tg)));
+        }
 
-            var jiraAndTimegrips = new List<JiraAndTimegrip>(_jiraTasks.Count());
-            foreach (var jiraTask in _jiraTasks.GroupBy(t => t.Task.Trim().ToUpper()).Select(g => new JiraTask()
+        private static JiraAndTimegrip CreateJiraAndTimegripTask(JiraTask jiraTask, TimegripActivity timegripActivity)
+        {
+            return new JiraAndTimegrip()
+            {
+                Activity = timegripActivity,
+                Task = jiraTask,
+                Updated = jiraTask.Updated
+            };
+        }
+
+        private static bool AreTheSameTask(JiraTask jiraTask, TimegripActivity timegripActivity)
+        {
+            return jiraTask.Task.Equals(timegripActivity.Activity, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private IEnumerable<TimegripActivity> GetTimegripActivities()
+        {
+            return _timegripActivities.GroupBy(a => a.Activity).Select(a => new TimegripActivity()
+            {
+                Activity = a.Key,
+                Amount = a.Sum(t => t.Amount),
+                TimeUsed = TimeSpan.FromMinutes(a.Sum(t => t.TimeUsed.TotalMinutes)),
+                Customer = a.Select(t => t.Customer).FirstOrDefault(),
+                Project = a.Select(t => t.Project).FirstOrDefault(),
+            });
+        }
+
+        private IEnumerable<JiraTask> GetJiraTasks()
+        {
+            return _jiraTasks.GroupBy(t => t.Task.Trim().ToUpper()).Select(g => new JiraTask()
             {
                 Task = g.Key,
                 Status = g.Select(t => t.Status).FirstOrDefault(),
                 Estimate = TimeSpan.FromMinutes(g.Sum(t => t.Estimate.TotalMinutes)),
                 Timespent = TimeSpan.FromMinutes(g.Sum(t => t.Timespent.TotalMinutes)),
-                Title = g.Select(t => t.Title).FirstOrDefault()
-            }))
-            {
-                foreach (var timegripActivity in _timegripActivities.GroupBy(a => a.Activity).Select(a => new TimegripActivity()
-                {
-                    Activity = a.Key,
-                    Amount = a.Sum(t => t.Amount),
-                    TimeUsed = TimeSpan.FromMinutes(a.Sum(t => t.TimeUsed.TotalMinutes)),
-                    Customer = a.Select(t => t.Customer).FirstOrDefault(),
-                    Project = a.Select(t => t.Project).FirstOrDefault(),
-                }))
-                {
-                    if (jiraTask.Task.Equals(timegripActivity.Activity, StringComparison.OrdinalIgnoreCase))
-                    {
-                        jiraAndTimegrips.Add(new JiraAndTimegrip()
-                        {
-                            Activity = timegripActivity,
-                            Task = jiraTask
-                        });
-                    }
-                }
-            }
-            return jiraAndTimegrips;
+                Title = g.Select(t => t.Title).FirstOrDefault(),
+                Updated = g.Max(t => t.Updated)
+            });
         }
 
         private TimegripActivities GetTimegripActivities(Stream stream)
@@ -217,14 +232,7 @@ namespace TimegripExtended
         {
             if (tabControl1.SelectedIndex == 1)
             {
-                using (var db = new TaskStoreContext())
-                {
-                    var query = from c in db.ExcludedTasks select c;
 
-                    var users = query.ToList();
-
-
-                }
             }
         }
 

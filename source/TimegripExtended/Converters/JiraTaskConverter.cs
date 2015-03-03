@@ -34,6 +34,8 @@ namespace TimegripExtended.Converters
                         var xElement = (XElement)item;
                         var jiraTask = new JiraTask();
 
+                        jiraTask.Updated = DateTime.Parse(xElement.Element("updated").Value, new System.Globalization.CultureInfo("en-US"));
+
                         var element = xElement.Element(KeyXName);
                         if (element != null)
                         {
